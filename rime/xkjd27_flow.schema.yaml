@@ -1,0 +1,160 @@
+# Rime schema
+# encoding: utf-8
+#
+# 键道27・流
+# 支持用户调频造词的 键道27 输入法
+
+schema:
+  schema_id: xkjd27_flow
+  name: 键道27・流
+  version: "1.0"
+  description: |
+    键道27 的 无固定码表方案
+    使用词库词频自动生成候选排序和笔码筛选权重
+    支持 ` 键自主造词和 - = 键自主调频
+    顶功逻辑不变
+  author:
+    - TsFreddie
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中, 西 ]
+  - name: full_shape
+    states: [ 半, 全 ]
+  - name: jffh
+    reset: 0
+    states: [ 简, 繁 ]
+
+engine:
+  processors:
+    - ascii_composer
+    - key_binder
+    - lua_processor@*flow_shape
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - table_translator
+  filters:
+    - lua_filter@*flow_filter
+    - simplifier@jffh
+    - uniquifier
+
+speller:
+  alphabet: "abcdefghijklmnopqrstuvwxyz;"
+
+translator:
+  # 词库：xkjd27_flow.ice（雾凇拼音）| xkjd27_flow.simp（袖珍简化字）
+  dictionary: xkjd27_flow.ice
+  enable_user_dict: false
+  enable_sentence: false
+  enable_completion: false
+  enable_encoder: false
+  enable_charset_filter: false
+
+# 调序与造词引擎数据库
+flow_order:
+  # 存储后端：leveldb（默认，高性能）| txt（纯文本，方便调试与手动修改）
+  backend: leveldb
+  name: xkjd27_flow.order
+
+# 候选提示：非首选候选右侧显示「让它成为首选还需要按的键」
+# （声码未输完补声码，输完则给形码；候选按这个键数稳定排序）
+flow_hint:
+  # 笔码（形码）提示
+  shape: true
+  # 不可顶功提示（⛔️）
+  topup: true
+# 全关用 flow_hint: false（关了提示也就不排序）
+
+# 次简（原版「二重」）：候选第 2 位标 🔹，Tab 上屏/学习；
+# 设为 false 整块关掉（Tab 不处理、不显示次简候选、不学习）
+flow_secondary: true
+
+jffh:
+  opencc_config: s2t.json
+  option_name: jffh
+
+punctuator:
+  full_shape:
+    ' ' : { commit: '　' }
+    ',' : { commit: ， }
+    '.' : { commit: 。 }
+    '<' : [ 《, 〈, «, ‹ ]
+    '>' : [ 》, 〉, », › ]
+    '?' : { commit: ？ }
+    '/' : { commit: / }
+    ':' : { commit: ： }
+    '''' : { pair: [ '‘', '’' ] }
+    '"' : { pair: [ '“', '”' ] }
+    '\' : [ 、, ＼ ]
+    '|' : [ ·, ｜, '§', '¦' ]
+    '`' : ｀
+    '~' : ～
+    '!' : { commit: ！ }
+    '@' : ＠
+    '#' : ＃
+    '%' : [ ％, '°', '℃' ]
+    '$' : [ ￥, '$', '€', '£', '¥', '¢', '¤' ]
+    '^' : { commit: …… }
+    '&' : ＆
+    '*' : [ ＊, ·, ・, ×, ※, ❂ ]
+    '(' : （
+    ')' : ）
+    '-' : '-'
+    '_' : ——
+    '+' : '+'
+    '=' : '='
+    '[' : [ 「, 【, 〔, ［ ]
+    ']' : [ 」, 】, 〕, ］ ]
+    '{' : [ 『, 〖, ｛ ]
+    '}' : [ 』, 〗, ｝ ]
+  half_shape:
+    ',' : { commit: ， }
+    '.' : { commit: 。 }
+    '<' : [ 《, 〈, «, ‹ ]
+    '>' : [ 》, 〉, », › ]
+    '?' : { commit: ？ }
+    '/' : { commit: / }
+    ':' : { commit: ： }
+    '''' : { pair: [ '‘', '’' ] }
+    '"' : { pair: [ '“', '”' ] }
+    '\' : [ 、, '\', ＼ ]
+    '|' : [ ·, '|', ｜, '§', '¦' ]
+    '`' : '`'
+    '~' : [ '~', ～ ]
+    '!' : { commit: ！ }
+    '@' : '@'
+    '#' : '#'
+    '%' : [ '%', ％, '°', '℃' ]
+    '$' : [ ￥, '$', '€', '£', '¥', '¢', '¤' ]
+    '^' : { commit: …… }
+    '&' : '&'
+    '*' : [ '*', ＊, ·, ・, ×, ※, ❂ ]
+    '(' : （
+    ')' : ）
+    '-' : '-'
+    '_' : ——
+    '+' : '+'
+    '=' : '='
+    '[' : [ 「, 【, 〔, ［ ]
+    ']' : [ 」, 】, 〕,  ］ ]
+    '{' : [ 『, 〖, ｛ ]
+    '}' : [ 』, 〗, ｝ ]
+
+key_binder:
+  bindings:
+    - {when: always, accept: F6, select: .next }
+    - {when: always, accept: F7, toggle: jffh }
+    - {when: paging, accept: bracketleft, send: Page_Up }
+    - {when: has_menu, accept: bracketright, send: Page_Down }
