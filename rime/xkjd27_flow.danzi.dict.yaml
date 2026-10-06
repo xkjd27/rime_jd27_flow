@@ -455,6 +455,7 @@ use_preset_vocabulary: false
 椓	;	7
 繇	;	7
 膣	;	7
+呪	;	6
 术	;	6
 疐	;	6
 葴	;	6
@@ -551,6 +552,7 @@ use_preset_vocabulary: false
 辀	;d	23
 赒	;d	9
 繇	;d	7
+呪	;d	6
 鸼	;d	3
 荮	;d	2
 㑇	;d	1
@@ -1448,6 +1450,7 @@ use_preset_vocabulary: false
 𨚕	b	1
 𨭉	b	1
 𬷕	b	1
+𰻝	b	1
 宾	bb	117598
 彬	bb	60398
 斌	bb	48027
@@ -1845,6 +1848,7 @@ use_preset_vocabulary: false
 庳	bw	2
 椑	bw	2
 鞁	bw	1
+𰻝	bx	1
 报	bz	859753
 保	bz	859752
 包	bz	667583
@@ -2411,6 +2415,7 @@ use_preset_vocabulary: false
 巅	d	9967
 悼	d	9880
 嫡	d	9082
+丼	d	9000
 凋	d	8718
 淀	d	8590
 渎	d	8378
@@ -2598,6 +2603,7 @@ use_preset_vocabulary: false
 㙂	d	10
 赕	d	10
 踶	d	10
+𪠽	d	10
 髢	d	9
 俤	d	8
 筜	d	8
@@ -2962,6 +2968,7 @@ use_preset_vocabulary: false
 谠	dp	166
 垱	dp	108
 菪	dp	48
+𪠽	dp	10
 筜	dp	8
 蟷	dp	1
 𣗋	dp	1
@@ -3054,6 +3061,7 @@ use_preset_vocabulary: false
 冻	dy	55112
 栋	dy	47210
 咚	dy	43570
+丼	dy	9000
 峒	dy	4991
 胴	dy	4599
 侗	dy	2800
@@ -4805,6 +4813,7 @@ use_preset_vocabulary: false
 蕥	f	2
 薁	f	2
 蝘	f	2
+蝜	f	2
 鄅	f	2
 鳆	f	2
 鹝	f	2
@@ -5315,6 +5324,7 @@ use_preset_vocabulary: false
 玞	fj	5
 艴	fj	5
 砆	fj	3
+蝜	fj	2
 鳆	fj	2
 㕮	fj	1
 㳇	fj	1
@@ -6261,6 +6271,7 @@ use_preset_vocabulary: false
 矼	g	4
 筶	g	4
 爟	g	3
+畊	g	3
 红	g	3
 耇	g	3
 鳡	g	3
@@ -6577,6 +6588,7 @@ use_preset_vocabulary: false
 颈	gr	21
 㹴	gr	10
 浭	gr	8
+畊	gr	3
 鹒	gr	1
 𬒔	gr	1
 嘎	gs	88604
@@ -14256,6 +14268,8 @@ use_preset_vocabulary: false
 魄	t	10
 	t	10
 𡘙	t	10
+𲎿	t	10
+𲰼	t	10
 熥	t	9
 铴	t	9
 颋	t	9
@@ -14606,6 +14620,8 @@ use_preset_vocabulary: false
 阘	ts	48
 褟	ts	44
 	ts	10
+𲎿	ts	10
+𲰼	ts	10
 漯	ts	6
 鞳	ts	6
 嗒	ts	1
@@ -17690,6 +17706,7 @@ use_preset_vocabulary: false
 簉	z	13
 茲	z	12
 耔	z	11
+咗	z	10
 鄫	z	10
 鲗	z	10
 枞	z	9
@@ -17846,6 +17863,7 @@ use_preset_vocabulary: false
 胙	zl	169
 捽	zl	149
 阼	zl	53
+咗	zl	10
 岞	zl	6
 怎	zn	2520317
 谮	zn	190

@@ -28,7 +28,7 @@ end
 -- 把手动顺序里的候选提到前面；传了 span 时，列表里有、当前翻译没给的
 -- （用户 pin 过的词，含造词入库的）直接补一个候选——所以只用 order.userdb
 -- 就能既排序又加词。
-local function apply_manual_order(list, key, span_start, span_end)
+local function apply_manual_order(list, key, span_start, span_end, code)
     local wanted = order.get(key)
     if not wanted or #wanted == 0 then
         return list
@@ -47,8 +47,12 @@ local function apply_manual_order(list, key, span_start, span_end)
             result[#result + 1] = list[found]
             used[found] = true
         elseif span_start then
-            result[#result + 1] =
-                Candidate("flow_order", span_start, span_end, text, "")
+            -- 翻译没给的 pin（造词存的组合词）补成候选；preedit 要带上当前
+            -- 音码——否则这一段 composition 的 preedit 只剩形码，提示框里
+            -- 看不到 hjm，simp 这种没有词库兜底的词库下尤其明显
+            local cand = Candidate("flow_order", span_start, span_end, text, "")
+            cand.preedit = code or ""
+            result[#result + 1] = cand
         end
     end
     for i, cand in ipairs(list) do
@@ -193,27 +197,101 @@ local function filter(translation, env)
     local input_len = #input
     local shape = ctx:get_property("flow_shape") or ""
     local creating = ctx:get_property("flow_create") == "1"
-    local key = input .. "|" .. shape
 
-    -- 造词模式按当前段（分词后可能不是从 0 开始）收集候选；
-    -- 普通模式要求候选覆盖整段输入
-    local span_start, span_end = 0, input_len
+    -- 收集这段 translation 的候选。
+    -- 造词模式下 filter 也会被叫到开头 ` 的 punct 段上，这时候
+    -- composition:back() 是后面的音码段；span 要以这段候选自己的为准，
+    -- 否则会把 pin 候选挂到 ` 段上（preedit/preview 里重复显示）。
+    -- 普通模式照旧要求候选覆盖整段输入。
+    local dict_words = {}
+    local base = {}
+    local span_start, span_end
     if creating then
-        local seg = ctx.composition and ctx.composition:back()
-        if seg then
-            span_start, span_end = seg.start, seg._end
+        for cand in translation:iter() do
+            local s, e = cand._start or 0, cand._end or 0
+            if not span_start then
+                span_start, span_end = s, e
+            end
+            if s == span_start and e == span_end then
+                dict_words[cand.text] = true
+                if shapes.match(cand.text, shape) then
+                    base[#base + 1] = cand
+                end
+            end
+        end
+        if not span_start then
+            -- 这段还没有候选（音码打一半）：退回当前段
+            span_start, span_end = 0, input_len
+            local seg = ctx.composition and ctx.composition:back()
+            if seg then
+                span_start, span_end = seg.start, seg._end
+            end
+        end
+    else
+        span_start, span_end = 0, input_len
+        for cand in translation:iter() do
+            if (cand._start or 0) == span_start and
+                    (cand._end or 0) == span_end then
+                dict_words[cand.text] = true
+                if shapes.match(cand.text, shape) then
+                    base[#base + 1] = cand
+                end
+            end
         end
     end
-
-    local base = {}
-    for cand in translation:iter() do
-        if (cand._start or 0) == span_start and (cand._end or 0) == span_end
-                and shapes.match(cand.text, shape) then
-            base[#base + 1] = cand
+    -- 当前段的音码（造词模式下去掉开头的 `）。pin / 自动前进 / 补全都用它
+    -- 当 key：造词模式下已确认的段不该参与当前段的候选和排除
+    local code_text = input:sub(span_start + 1, span_end)
+    if creating then
+        code_text = create.strip_marker(code_text)
+    end
+    local key = code_text .. "|" .. shape
+    -- 自造词补全：自造词只存在 pin 里，输入同音码下更短/其它形码级别时
+    -- 也要能像词库词一样看到它——同音码下 pin 在其它级别的词按 pin 长短
+    -- 补进候选（pin 越短越靠前）。不这样做的话，simp 这种词库没兜底的词
+    -- 一旦被 = 加长就整个消失。
+    -- 补进 base 而不是单放 chosen：shape_hint 只认 base，进 base 才能像
+    -- 词库词一样算「还需要按什么」；自造词同样参与自动前进排除，
+    -- 多按一个形码就该翻到下一个候选（和词库词一致）。
+    -- 默认权重高：补出来的自造词放在自然候选前面（命中 pin 的再由
+    -- apply_manual_order 提到最前），其余和自然候选一起按提示键数排序。
+    local injected = {}
+    if code_text ~= "" and not is_shape_only_input(code_text) then
+        local seen = {}
+        for _, cand in ipairs(base) do
+            seen[cand.text] = true
         end
+        local pins = order.pins_under(code_text)
+        table.sort(pins, function(a, b)
+            if #a.shape ~= #b.shape then
+                return #a.shape < #b.shape
+            end
+            return a.key < b.key
+        end)
+        for _, pin in ipairs(pins) do
+            for _, text in ipairs(pin.list) do
+                if not dict_words[text] then
+                    -- 本级 pin 也要进 base：模拟更深一级时它仍在候选里，
+                    -- apply_manual_order 会把它排到当前级别首位，不会重复
+                    if not seen[text] and shapes.match(text, shape) then
+                        seen[text] = true
+                        local cand = Candidate("flow_order", span_start,
+                                               span_end, text, "")
+                        cand.preedit = code_text
+                        injected[#injected + 1] = cand
+                    end
+                end
+            end
+        end
+    end
+    if #injected > 0 then
+        for _, cand in ipairs(base) do
+            injected[#injected + 1] = cand
+        end
+        base = injected
     end
     -- 先应用 pin：列表里有、翻译没给的词会被补成候选（造词存的组合词）
-    local chosen = apply_manual_order(base, key, span_start, span_end)
+    local chosen = apply_manual_order(base, key, span_start, span_end, code_text)
     -- 造词模式还没打码（只有 `）：候选里补上最近的造词，供 = 删除。
     -- 文本带造词标记（`` `简直了 ``），选中后状态和普通造词选段一致；
     -- 注释标「最近」，不参与提示计算（见下面 yield 前的分支）
@@ -253,8 +331,10 @@ local function filter(translation, env)
                 end
             end
             if not found then
-                chosen[#chosen + 1] =
+                local cand =
                     Candidate("flow_order", span_start, span_end, secondary_text, "")
+                cand.preedit = code_text
+                chosen[#chosen + 1] = cand
                 found = #chosen
             end
             if found > 2 then
@@ -285,7 +365,7 @@ local function filter(translation, env)
         return
     end
 
-    local excluded = collect_exclusions(input, shape)
+    local excluded = collect_exclusions(code_text, shape)
 
     -- 该 key 有手动顺序：不再做自动前进
     local wanted = order.get(key)
@@ -296,10 +376,22 @@ local function filter(translation, env)
     else
         local has_excluded = next(excluded) ~= nil
         final = {}
+        local full_code = {}   -- 全码命中但被自动前进排除的，低优先级兜底
         for _, cand in ipairs(chosen) do
-            if not (has_excluded and excluded[cand.text]) then
+            if has_excluded and excluded[cand.text] then
+                -- 音码已完整 + 形码刚好是完整形码 = 命中全码：无视 auto
+                -- advance，补在候选最后（组内保持 chosen 顺序：自造词在前，
+                -- 其余按权重序）；纯形码输入不算
+                if shape ~= "" and shapes.expected(cand.text) == shape and
+                        codes.next_keys(cand.text, code_text) == nil then
+                    full_code[#full_code + 1] = cand
+                end
+            else
                 final[#final + 1] = cand
             end
+        end
+        for _, cand in ipairs(full_code) do
+            final[#final + 1] = cand
         end
         if #final == 0 then  -- 全被排除则回退，避免空菜单
             final = chosen
@@ -310,17 +402,11 @@ local function filter(translation, env)
     top_cache[key] = current_top
 
     -- 提示按键：造词模式用当前段的音码（去掉开头的 `），否则用整段输入
-    local hint_input = input:sub(span_start + 1, span_end)
-    if creating then
-        hint_input = create.strip_marker(hint_input)
-    end
+    local hint_input = code_text
     local hint_ctx = {}
     -- 不可顶功提示（原版 ⛔️）：纯音码、不足 4 键、还没形码时，
     -- 再加音码也不会顶功上屏（只会继续延长输入）
-    local code = input:sub(span_start + 1, span_end)
-    if creating then
-        code = create.strip_marker(code)
-    end
+    local code = code_text
     local no_topup = shape == "" and #code >= 1 and #code < 4 and
         code:match("^[bcdefghjklmnpqrstwxyz;]+$") ~= nil
     -- 按「还差几键」（提示键数）稳定排序：首选 0 键、次简 1 键（Tab），

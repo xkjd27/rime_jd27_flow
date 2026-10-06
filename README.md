@@ -1,12 +1,12 @@
-# 键道27・流
+# 键道27・流 - Qwerty 双形顶功输入方案
 
-基于[键道27](https://github.com/xkjd27/rime_jd27)（Qwerty 布局）的设计，抛弃了固定码表，采用词库和逻辑顺序。
-
-键道27C・流（Colemak 布局）见 [rime_jd27c_flow](https://github.com/xkjd27/rime_jd27c_flow)，两者功能一致，只有键位不同。
-
+基于[键道27](https://github.com/xkjd27/rime_jd27)的设计，抛弃了固定码表，采用词库和逻辑顺序。
 
 ## 布局
 ![Layout](./docs/layout.png)
+
+### 其他布局
+* Colemak 版本 - [键道27C・流](https://github.com/xkjd27/rime_jd27c_flow)
 
 ## 与键道27的区别
 
@@ -33,7 +33,7 @@
 词库需要使用 `build_flow_dict.py` 为该方案专门构建。本仓库自带两套词库：
 
 - 雾凇拼音 `xkjd27_flow.ice`，词库量大，长词组多，适合希望开箱即用的用户
-- 袖珍简化字 `xkjd27_flow.simp`，词库量少，网络用于较少，适合希望避免词库冗余且倾向于自主造词的用户
+- 袖珍简化字 `xkjd27_flow.simp`，网络用语与长词组较少，适合希望避免词库冗余且倾向于自主造词的用户
 
 自带词库可能不会实时跟进上游更新，缺词与网络新词建议直接使用造词功能补充
 

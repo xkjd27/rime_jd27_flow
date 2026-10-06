@@ -897,6 +897,7 @@
 呤	oioa
 呦	oaao
 周	uavo
+呪	ooua
 呯	ovou
 呱	ouua
 呲	oivi
@@ -927,6 +928,7 @@
 咔	oivv
 咕	ouoo
 咖	oauo
+咗	ovuv
 咙	ovua
 咚	ouao
 咛	oooa
@@ -4410,6 +4412,7 @@
 畀	iavu
 畅	iaau
 畈	iauu
+畊	iavv
 畋	iauv
 界	iaiu
 畎	iavu
@@ -6234,6 +6237,7 @@
 蝗	iaui
 蝘	iavo
 蝙	iaoa
+蝜	iaua
 蝠	iavo
 蝣	iaov
 蝤	iaou
@@ -7102,7 +7106,7 @@
 酂	uvai
 酃	voai
 酅	iaai
-酆	vvai
+酆	ivvv
 酉	viau
 酊	vivi
 酋	ouvi
@@ -8213,6 +8217,7 @@
 𩾃	uaua
 𩾌	uaov
 𪟝	vvau
+𪠽	oioa
 𪣻	voou
 𪤗	voao
 𪨊	avii
@@ -8375,3 +8380,6 @@
 𭎂	voii
 𮔅	iaua
 𮝷	vauo
+𰻝	ooou
+𲎿	uoai
+𲰼	iaai
